@@ -16,6 +16,13 @@
         });
     };
 
+    var setupResponsiveness = function ($queryDiv, $graphDiv, index, howMany, opts)  {
+        var debounced_draw = debounce(function() {
+            $.graphIt($queryDiv, $graphDiv, index, howMany, opts, true);
+        }, 125);
+        $(window).resize(debounced_draw);
+    };
+
     var graphControls = function ($queryDiv, $graphDiv, isInit) {
         var MIN_HITS_TO_SHOW = 20;
 
@@ -174,7 +181,7 @@
      * are provided by the calling function.
      */
     $.extend({
-        graphIt: function ($queryDiv, $graphDiv, index, howMany, opts) {
+        graphIt: function ($queryDiv, $graphDiv, index, howMany, opts, resize) {
             /* barHeight: Height of each hit track.
              * barPadding: Padding around each hit track.
              * legend: Height reserved for the overview legend.
@@ -192,7 +199,7 @@
             // Don't draw anything when no hits are obtained.
             if (hits.length < 1) return false;
 
-            if (index !== 0) {
+            if (index !== 0 || resize === true) {
                 // Currently, we have no good way to extend pre-existing graph
                 // and hence, are removing the old one and redrawing.
                 $graphDiv.find('svg').remove();
@@ -340,7 +347,7 @@
             }
             // Bind listener events once all the graphical elements have
             // been drawn for first time.
-            if (index === 0) {
+            if (index === 0 && resize !== true) {
                 graphControls($queryDiv, $graphDiv, true);
             }
             // Refresh tooltip each time graph is redrawn.
@@ -348,6 +355,8 @@
             // Ensure clicking on 'rect' takes user to the relevant hit on all
             // browsers.
             setupClick($graphDiv);
+            // Redraw the graph on a browser resize...
+            setupResponsiveness($queryDiv, $graphDiv, index, howMany, opts);
         }
     });
 }(jQuery));
